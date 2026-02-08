@@ -107,6 +107,11 @@ func postArtist(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
+func deleteArtists(w http.ResponseWriter, r *http.Request) {
+	artists = map[string]Artist{}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func deleteArtist(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if _, ok := artists[id]; !ok {
@@ -124,6 +129,7 @@ func setupRouter() *chi.Mux {
 	// регистрируем в роутере эндпоинты для artists
 	r.Get("/artists", getArtists)
 	r.Post("/artists", postArtist)
+	r.Delete("/artists", deleteArtists)
 	r.Get("/artists/{id}", getArtist)
 	r.Delete("/artists/{id}", deleteArtist)
 
