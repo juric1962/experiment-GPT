@@ -8,6 +8,8 @@ import (
 )
 
 func resetArtists() {
+	artistsMu.Lock()
+	defer artistsMu.Unlock()
 	artists = defaultArtists()
 }
 
@@ -25,6 +27,32 @@ func TestDeleteArtists(t *testing.T) {
 
 	if len(artists) != 0 {
 		t.Fatalf("expected artists map to be empty after DELETE /artists, got %d entries", len(artists))
+	}
+}
+
+func TestGetArtistNotFound(t *testing.T) {
+	resetArtists()
+	r := setupRouter()
+
+	req := httptest.NewRequest(http.MethodGet, "/artists/999", nil)
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d", http.StatusNotFound, rr.Code)
+	}
+}
+
+func TestDeleteArtistNotFound(t *testing.T) {
+	resetArtists()
+	r := setupRouter()
+
+	req := httptest.NewRequest(http.MethodDelete, "/artists/999", nil)
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d", http.StatusNotFound, rr.Code)
 	}
 }
 

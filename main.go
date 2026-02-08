@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -48,10 +49,23 @@ func defaultArtists() map[string]Artist {
 }
 
 var artists = defaultArtists()
+var artistsMu sync.RWMutex
+
+func snapshotArtists() map[string]Artist {
+	artistsMu.RLock()
+	defer artistsMu.RUnlock()
+
+	copyArtists := make(map[string]Artist, len(artists))
+	for id, artist := range artists {
+		copyArtists[id] = artist
+	}
+
+	return copyArtists
+}
 
 func getArtists(w http.ResponseWriter, r *http.Request) {
 	// сериализуем данные из слайса artists
-	resp, err := json.Marshal(artists)
+	resp, err := json.Marshal(snapshotArtists())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -67,10 +81,12 @@ func getArtists(w http.ResponseWriter, r *http.Request) {
 func getArtist(w http.ResponseWriter, r *http.Request) {
 	// сериализуем данные из слайса artists
 	id := chi.URLParam(r, "id")
+	artistsMu.RLock()
 	artist, ok := artists[id]
+	artistsMu.RUnlock()
 
 	if !ok {
-		http.Error(w, "artist not found", http.StatusNoContent)
+		http.Error(w, "artist not found", http.StatusNotFound)
 		return
 	}
 
@@ -102,20 +118,27 @@ func postArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	artistsMu.Lock()
 	artists[artist.ID] = artist
+	artistsMu.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
 func deleteArtists(w http.ResponseWriter, r *http.Request) {
+	artistsMu.Lock()
 	artists = map[string]Artist{}
+	artistsMu.Unlock()
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func deleteArtist(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	artistsMu.Lock()
+	defer artistsMu.Unlock()
+
 	if _, ok := artists[id]; !ok {
-		http.Error(w, "artist not found", http.StatusNoContent)
+		http.Error(w, "artist not found", http.StatusNotFound)
 		return
 	}
 
