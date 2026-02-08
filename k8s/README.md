@@ -2,9 +2,11 @@
 
 ## 1) Build and load server image in Minikube
 
+Use the repository root as the build context so Docker can read `go.mod`, `go.sum`, and `main.go`.
+
 ```bash
 eval $(minikube docker-env)
-docker build -t experiment-gpt:latest .
+docker build -t experiment-gpt:latest -f Dockerfile .
 ```
 
 ## 2) Apply manifests
