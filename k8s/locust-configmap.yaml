@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: locust-script
+data:
+  locustfile.py: |
+    from locust import HttpUser, between, task
+
+
+    class ApiUser(HttpUser):
+        wait_time = between(1, 2)
+
+        @task(5)
+        def list_artists(self):
+            self.client.get("/artists")
+
+        @task(2)
+        def get_artist(self):
+            self.client.get("/artists/1")
+
+        @task(1)
+        def post_artist(self):
+            self.client.post(
+                "/artists",
+                json={
+                    "id": "99",
+                    "name": "Locust Test Artist",
+                    "born": "2024",
+                    "genre": "test",
+                    "songs": ["load", "test"],
+                },
+            )

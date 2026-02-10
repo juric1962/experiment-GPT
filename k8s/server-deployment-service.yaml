@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: experiment-gpt
+  labels:
+    app: experiment-gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: experiment-gpt
+  template:
+    metadata:
+      labels:
+        app: experiment-gpt
+    spec:
+      containers:
+        - name: experiment-gpt
+          image: experiment-gpt:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9999
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: experiment-gpt-service
+spec:
+  selector:
+    app: experiment-gpt
+  ports:
+    - protocol: TCP
+      port: 9999
+      targetPort: 9999
+      name: http
