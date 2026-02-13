@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: locust
-          image: locustio/locust:2.37.10
+          image: locustio/locust
           imagePullPolicy: IfNotPresent
           args:
             - -f
